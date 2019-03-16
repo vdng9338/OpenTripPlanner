@@ -31,3 +31,22 @@ otp.core.GeocoderBuiltin = otp.Class({
     }
 
 });
+
+otp.core.GeocoderMapbox = otp.Class({
+    url: 'https://api.mapbox.com/geocoding/v5/mapbox.places/',
+
+    initialize: function(url, addressParam) {},
+
+    geocode: function(address, callback) {
+        $.getJSON(this.url + encodeURIComponent(address) + '.json', {access_token: 'INSERT_TOKEN_HERE', language: 'fr', limit: 10}, function(response) {
+            var resp2 = [];
+            console.log(response.features);
+            for(var i = 0; i < response.features.length; i++) {
+                var result = response.features[i];
+                var res2 = {lat: result.center[1], lng: result.center[0], description: result.place_name};
+                resp2.push(res2);
+            }
+            callback.call(this, resp2);
+        });
+    }
+});

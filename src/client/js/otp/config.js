@@ -100,6 +100,11 @@ otp.config = {
             name: 'OSM Standard Tiles',
             tileUrl: 'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
             attribution : 'Map data and tiles © OpenStreetMap contributors'
+        },
+        {
+            name: 'Mapbox Streets',
+            tileUrl: 'https://api.mapbox.com/styles/v1/vdng9338/cjsxdv3290qoe1fmvvpz8b1a4/tiles/256/{z}/{x}/{y}{r}?access_token=INSERT_TOKEN_HERE',
+            attribution : '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>'
         }
     ],
     
@@ -173,6 +178,10 @@ otp.config = {
      */
 
     geocoders : [
+        {
+            name: 'Mapbox geocoder',
+            className: 'otp.core.GeocoderMapbox'
+        },
         {
             name: 'OTP built-in geocoder',
             className: 'otp.core.GeocoderBuiltin'
