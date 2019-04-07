@@ -251,6 +251,7 @@ otp.modules.planner.Itinerary = otp.Class({
                 html += ': ';
                 if(leg.route !== leg.routeLongName) html += "("+leg.route+") ";
                 html += leg.routeLongName;
+                if(leg.tripShortName) html += " " + leg.tripShortName;
                 if(leg.headsign) html +=  pgettext("bus_direction", " to ") + leg.headsign;
             }
             else { // walk / bike / car

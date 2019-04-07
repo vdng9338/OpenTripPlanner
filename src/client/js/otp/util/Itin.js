@@ -297,7 +297,8 @@ otp.util.Itin = {
     },
 
     getRouteDisplayString : function(routeData) {
-        var str = routeData.shortName ? '('+routeData.shortName+') ' : '';
+        var str = '(' + routeData.agencyName + ') ';
+        str += routeData.shortName ? '('+routeData.shortName+') ' : '';
         str += routeData.longName;
         return str;
     },
