@@ -243,7 +243,7 @@ public class StreetLinkerModule implements GraphBuilderModule {
     }
   }
 
-  private void linkTransitEntrances(Graph graph) {
+  public void linkTransitEntrances(Graph graph) {
     LOG.info("Linking transit entrances to graph...");
     for (TransitEntranceVertex tEntrance : graph.getVerticesOfType(TransitEntranceVertex.class)) {
       vertexLinker.linkVertexPermanently(

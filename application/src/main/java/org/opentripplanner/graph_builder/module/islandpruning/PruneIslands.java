@@ -86,6 +86,8 @@ public class PruneIslands implements GraphBuilderModule {
     if (streetLinkerModule != null) {
       LOG.info("Reconnecting stops");
       streetLinkerModule.linkTransitStops(graph, timetableRepository);
+      LOG.info("Reconnecting transit entrances");
+      streetLinkerModule.linkTransitEntrances(graph);
       int isolated = 0;
       for (TransitStopVertex tStop : graph.getVerticesOfType(TransitStopVertex.class)) {
         if (tStop.getDegreeOut() + tStop.getDegreeIn() == 0) {
@@ -397,7 +399,7 @@ public class PruneIslands implements GraphBuilderModule {
             isolated.put(e, true);
             stats.put("isolated", stats.get("isolated") + 1);
           } else {
-            if(e instanceof StreetEdge) {
+            if (e instanceof StreetEdge) {
               StreetEdge pse = (StreetEdge) e;
               if (!isolated.containsKey(e)) {
                 boolean changed = false;
@@ -455,8 +457,7 @@ public class PruneIslands implements GraphBuilderModule {
                   }
                 }
               }
-            }
-            else {
+            } else {
               StreetTransitEntranceLink stel = (StreetTransitEntranceLink) e;
               if (isolated.containsKey(e)) {
                 if (traverseMode == TraverseMode.WALK) {
