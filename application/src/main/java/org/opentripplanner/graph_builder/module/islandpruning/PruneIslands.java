@@ -23,6 +23,7 @@ import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.street.model.edge.AreaGroup;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
+import org.opentripplanner.street.model.edge.StreetTransitEntranceLink;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -391,65 +392,77 @@ public class PruneIslands implements GraphBuilderModule {
       Vertex v = vIter.next();
       Collection<Edge> outgoing = new ArrayList<>(v.getOutgoing());
       for (Edge e : outgoing) {
-        if (e instanceof StreetEdge) {
+        if (e instanceof StreetEdge || e instanceof StreetTransitEntranceLink) {
           if (markIsolated) {
             isolated.put(e, true);
             stats.put("isolated", stats.get("isolated") + 1);
           } else {
-            StreetEdge pse = (StreetEdge) e;
-            if (!isolated.containsKey(e)) {
-              boolean changed = false;
+            if(e instanceof StreetEdge) {
+              StreetEdge pse = (StreetEdge) e;
+              if (!isolated.containsKey(e)) {
+                boolean changed = false;
 
-              // not a true island edge but has limited access
-              // so convert to noThruTraffic
-              if (traverseMode == TraverseMode.CAR) {
-                if (!pse.isMotorVehicleNoThruTraffic()) {
-                  pse.setMotorVehicleNoThruTraffic(true);
-                  changed = true;
+                // not a true island edge but has limited access
+                // so convert to noThruTraffic
+                if (traverseMode == TraverseMode.CAR) {
+                  if (!pse.isMotorVehicleNoThruTraffic()) {
+                    pse.setMotorVehicleNoThruTraffic(true);
+                    changed = true;
+                  }
+                } else if (traverseMode == TraverseMode.BICYCLE) {
+                  if (!pse.isBicycleNoThruTraffic()) {
+                    pse.setBicycleNoThruTraffic(true);
+                    changed = true;
+                  }
+                } else if (traverseMode == TraverseMode.WALK) {
+                  if (!pse.isWalkNoThruTraffic()) {
+                    pse.setWalkNoThruTraffic(true);
+                    changed = true;
+                  }
                 }
-              } else if (traverseMode == TraverseMode.BICYCLE) {
-                if (!pse.isBicycleNoThruTraffic()) {
-                  pse.setBicycleNoThruTraffic(true);
-                  changed = true;
+                if (changed) {
+                  stats.put("noThru", stats.get("noThru") + 1);
+                  nothru++;
                 }
-              } else if (traverseMode == TraverseMode.WALK) {
-                if (!pse.isWalkNoThruTraffic()) {
-                  pse.setWalkNoThruTraffic(true);
-                  changed = true;
+              } else {
+                StreetTraversalPermission permission = pse.getPermission();
+                boolean changed = false;
+                if (traverseMode == TraverseMode.CAR) {
+                  if (permission.allows(StreetTraversalPermission.CAR)) {
+                    permission = permission.remove(StreetTraversalPermission.CAR);
+                    changed = true;
+                  }
+                } else if (traverseMode == TraverseMode.BICYCLE) {
+                  if (permission.allows(StreetTraversalPermission.BICYCLE)) {
+                    permission = permission.remove(StreetTraversalPermission.BICYCLE);
+                    changed = true;
+                  }
+                } else if (traverseMode == TraverseMode.WALK) {
+                  if (permission.allows(StreetTraversalPermission.PEDESTRIAN)) {
+                    permission = permission.remove(StreetTraversalPermission.PEDESTRIAN);
+                    changed = true;
+                  }
+                }
+                if (changed) {
+                  if (permission == StreetTraversalPermission.NONE) {
+                    graph.removeEdge(pse);
+                    stats.put("removed", stats.get("removed") + 1);
+                    removed++;
+                  } else {
+                    pse.setPermission(permission);
+                    stats.put("restricted", stats.get("restricted") + 1);
+                    restricted++;
+                  }
                 }
               }
-              if (changed) {
-                stats.put("noThru", stats.get("noThru") + 1);
-                nothru++;
-              }
-            } else {
-              StreetTraversalPermission permission = pse.getPermission();
-              boolean changed = false;
-              if (traverseMode == TraverseMode.CAR) {
-                if (permission.allows(StreetTraversalPermission.CAR)) {
-                  permission = permission.remove(StreetTraversalPermission.CAR);
-                  changed = true;
-                }
-              } else if (traverseMode == TraverseMode.BICYCLE) {
-                if (permission.allows(StreetTraversalPermission.BICYCLE)) {
-                  permission = permission.remove(StreetTraversalPermission.BICYCLE);
-                  changed = true;
-                }
-              } else if (traverseMode == TraverseMode.WALK) {
-                if (permission.allows(StreetTraversalPermission.PEDESTRIAN)) {
-                  permission = permission.remove(StreetTraversalPermission.PEDESTRIAN);
-                  changed = true;
-                }
-              }
-              if (changed) {
-                if (permission == StreetTraversalPermission.NONE) {
-                  graph.removeEdge(pse);
+            }
+            else {
+              StreetTransitEntranceLink stel = (StreetTransitEntranceLink) e;
+              if (isolated.containsKey(e)) {
+                if (traverseMode == TraverseMode.WALK) {
+                  graph.removeEdge(stel);
                   stats.put("removed", stats.get("removed") + 1);
                   removed++;
-                } else {
-                  pse.setPermission(permission);
-                  stats.put("restricted", stats.get("restricted") + 1);
-                  restricted++;
                 }
               }
             }
